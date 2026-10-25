@@ -355,8 +355,11 @@ const API = 'https://www.googleapis.com'
 const FORMAS = ['Pix', 'Dinheiro', 'Transferência', 'Boleto', 'Cartão', 'Outra']
 let dados = null, senha = null, fila = Promise.resolve(), secaoAtual = 'emitir'
 let token = null, tokenClient = null, aguardandoToken = null
-// arquivo = onde a base está + a `version` do Drive lida ao abrir (trava contra duas máquinas).
-let arquivo = { pastaId: null, backupsId: null, id: null, version: null }
+// arquivo = onde a base está + a MARCA do conteúdo lida ao abrir (trava contra duas máquinas).
+// Marca = md5Checksum (muda só quando alguém grava). NÃO usar `version`: o Drive a aumenta sozinho
+// logo após cada gravação (processamento interno) e a trava acusava "outra máquina" sem haver (25/10/2026).
+let arquivo = { pastaId: null, backupsId: null, id: null, marca: null }
+const marcaDe = f => f?.md5Checksum || f?.headRevisionId || null
 let ultimoGravado = null, bloqueio = null
 const vazio = () => ({ versao: 6, criado_em: new Date().toISOString(), apps: [], clientes: [], licencas: [], pagamentos: [] })
 const ehBaseV6 = d => d && d.versao === 6 && Array.isArray(d.apps) && Array.isArray(d.licencas)
@@ -385,7 +388,7 @@ async function entrar() {
     // Duas bases na pasta = alguém criou uma por fora: não escolho por você.
     if (bases.length > 1) { erroInicio(`Há ${bases.length} arquivos ${ARQ} na pasta ${PASTA} do Drive. Deixe só um e entre de novo.`); return }
     arquivo.id = bases[0]?.id || null
-    arquivo.version = bases[0]?.version || null
+    arquivo.marca = marcaDe(bases[0])
   } catch (e) { erroInicio(e.message); return }
   const nova = !arquivo.id
   document.getElementById('passoLogin').style.display = 'none'
@@ -439,7 +442,7 @@ async function drive(caminho, opc = {}) {
   return r.status === 204 ? null : r.json()
 }
 async function acharNoDrive(q) {
-  const p = new URLSearchParams({ q, fields: 'files(id,name,version)', spaces: 'drive', orderBy: 'name desc', pageSize: '1000' })
+  const p = new URLSearchParams({ q, fields: 'files(id,name,md5Checksum,headRevisionId)', spaces: 'drive', orderBy: 'name desc', pageSize: '1000' })
   return (await drive('/drive/v3/files?' + p)).files
 }
 async function pastaNoDrive(nome, paiId) {
@@ -452,7 +455,7 @@ function criarNoDrive(nome, paiId, conteudo) {
   const lim = 'kg' + crypto.randomUUID()
   const corpo = `--${lim}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: nome, parents: [paiId], mimeType: 'application/json' })}\r\n` +
     `--${lim}\r\nContent-Type: application/json\r\n\r\n${conteudo}\r\n--${lim}--`
-  return drive('/upload/drive/v3/files?uploadType=multipart&fields=id,version', { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${lim}` }, body: corpo })
+  return drive('/upload/drive/v3/files?uploadType=multipart&fields=id,md5Checksum,headRevisionId', { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${lim}` }, body: corpo })
 }
 
 // Gravações em fila: duas ações seguidas não podem gravar fora de ordem. Cada uma grava o retrato
@@ -465,18 +468,18 @@ function salvar() {
     if (bloqueio) throw new Error(bloqueio)
     const conteudo = JSON.stringify(await cifrar(JSON.parse(json), senha))
     if (arquivo.id) {
-      // shortcut: entre conferir a version e gravar há ~1 s; basta para um emissor só. Com vários,
+      // shortcut: entre conferir a marca e gravar há ~1 s; basta para um emissor só. Com vários,
       // trocar por um arquivo de trava.
-      const atual = await drive(`/drive/v3/files/${arquivo.id}?fields=version`)
-      if (atual.version !== arquivo.version) {
+      const atual = marcaDe(await drive(`/drive/v3/files/${arquivo.id}?fields=md5Checksum,headRevisionId`))
+      if (!atual || atual !== arquivo.marca) {
         bloqueio = 'A base foi alterada em outra máquina (ou aba) depois que você a abriu. Nada foi gravado: recarregue a página (F5) e repita.'
         throw new Error(bloqueio)
       }
-      arquivo.version = (await drive(`/upload/drive/v3/files/${arquivo.id}?uploadType=media&fields=version`,
-        { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: conteudo })).version
+      arquivo.marca = marcaDe(await drive(`/upload/drive/v3/files/${arquivo.id}?uploadType=media&fields=md5Checksum,headRevisionId`,
+        { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: conteudo }))
     } else {
       const novo = await criarNoDrive(ARQ, arquivo.pastaId, conteudo)
-      arquivo.id = novo.id; arquivo.version = novo.version
+      arquivo.id = novo.id; arquivo.marca = marcaDe(novo)
     }
     ultimoGravado = json
     const carimbo = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15)
@@ -575,13 +578,21 @@ const appPorId = id => dados.apps.find(a => a.id === id)
 const cliPorId = id => dados.clientes.find(c => c.id === id)
 const nomeCli = c => c ? (c.empresa ? `${c.nome} — ${c.empresa}` : c.nome) : '—'
 function opcoes(lista, rot, vazioTxt) { return (vazioTxt ? `<option value="">${esc(vazioTxt)}</option>` : '') + lista.map(x => `<option value="${esc(x.id)}">${esc(rot(x))}</option>`).join('') }
+// Remonta as listas MANTENDO o que estava escolhido (antes, uma gravação recusada voltava a tela para
+// o primeiro aplicativo e para "Selecione o cliente").
 function montarSelects() {
+  const antes = Object.fromEntries(['emApp', 'emCliente', 'fApp', 'emForma'].map(id => [id, document.getElementById(id).value]))
   const ativos = dados.apps.filter(a => a.status === 'ativo')
   document.getElementById('emApp').innerHTML = opcoes(ativos, a => `${a.nome} (${a.app_id})`, ativos.length ? '' : 'Cadastre um aplicativo')
   document.getElementById('emCliente').innerHTML = opcoes([...dados.clientes].sort((a,b) => a.nome.localeCompare(b.nome)), nomeCli, 'Selecione o cliente')
   document.getElementById('fApp').innerHTML = opcoes(dados.apps, a => a.nome, 'Todos')
   document.getElementById('emForma').innerHTML = FORMAS.map(f => `<option>${f}</option>`).join('')
   document.getElementById('emValidade').innerHTML = validadeBotoes('em')
+  for (const [id, v] of Object.entries(antes)) {
+    const el = document.getElementById(id)
+    if (v && [...el.options].some(o => o.value === v)) el.value = v
+  }
+  document.querySelector(`#emValidade .val-btn[data-v="${valSel.em}"]`)?.classList.add('sel')
 }
 
 // ══ Validade (Emitir, Nova chave, Transferir) ══

@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- v6.2: SEM SUPABASE. Base ÚNICA no Google Drive (pasta CHAVES), cifrada com a senha da base:
+     o Keygen só emite com internet, para não existirem duas cópias divergentes (decisão de
+     25/10/2026). Os APPS continuam conferindo a chave sem internet — isso não muda.
+     A CSP só deixa falar com o Google (login + Drive): nenhum outro destino. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://accounts.google.com/gsi/client; style-src 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://www.googleapis.com https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; img-src data:; base-uri 'none'; form-action 'none'">
+<script src="https://accounts.google.com/gsi/client" async></script>
+<title>Keygen — Gestor v6.2 (Drive)</title>
+<script>
+(function(){
+  var t = null
+  try { t = localStorage.getItem('keygen.tema') } catch (e) {}
+  if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  document.documentElement.dataset.theme = t
+})()
+</script>
+<style>
+:root, :root[data-theme=light]{
+  --bg:#f5f5f7; --surface:#ffffff; --surface-2:#f2f2f4; --hover:#ececf0;
+  --border:#e3e3e8; --border-strong:#d2d2d7;
+  --text:#1d1d1f; --muted:#6e6e73; --faint:#a1a1a6;
+  --accent:#0071e3; --accent-soft:#e8f1fc; --on-accent:#ffffff;
+  --ok:#1d8348; --ok-soft:#e6f4ea; --warn:#a35200; --warn-soft:#fdf1e1; --danger:#d70015; --danger-soft:#fdebec;
+  color-scheme: light;
+}
+:root[data-theme=dark]{
+  --bg:#101012; --surface:#1c1c1e; --surface-2:#232326; --hover:#2a2a2d;
+  --border:#2c2c2e; --border-strong:#3a3a3c;
+  --text:#f5f5f7; --muted:#98989d; --faint:#636366;
+  --accent:#0a84ff; --accent-soft:rgba(10,132,255,.15); --on-accent:#ffffff;
+  --ok:#30d158; --ok-soft:rgba(48,209,88,.13); --warn:#ffb340; --warn-soft:rgba(255,179,64,.13); --danger:#ff453a; --danger-soft:rgba(255,69,58,.13);
+  color-scheme: dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
+.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace}
+button,input,select,textarea{font:inherit;color:inherit}
+.muted{color:var(--muted)} .small{font-size:11.5px}
+svg.ic{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#inicio{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px 28px}
+.login-card h2{font-size:20px;font-weight:600}
+.login-card p{color:var(--muted);margin:6px 0 18px}
+#appMain{display:none;min-height:100vh}
+#sidebar{width:220px;flex:none;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:18px 12px;position:sticky;top:0;height:100vh}
+.sb-logo{padding:0 8px 18px} .sb-logo b{font-size:15px;font-weight:600;display:block} .sb-logo span{font-size:11.5px;color:var(--muted)}
+.sb-nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:8px;background:none;cursor:pointer;text-align:left}
+.nav-item:hover{background:var(--hover)} .nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:500}
+.sb-footer{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+.sb-user{font-size:11.5px;color:var(--muted);padding:0 8px 4px;word-break:break-all}
+#content{flex:1;min-width:0;padding:28px 32px 48px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.sec-hd h2{font-size:22px;font-weight:600}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.card + .card{margin-top:14px}
+.empty{padding:28px 12px;text-align:center;color:var(--muted)}
+.group{margin-bottom:14px}
+label{display:block;font-size:11.5px;font-weight:500;color:var(--muted);margin-bottom:5px}
+input,select,textarea{width:100%;padding:8px 10px;background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input[readonly]{background:var(--surface-2)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px} .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.mid-input{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;letter-spacing:1.5px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border:0;border-radius:8px;background:var(--accent);color:var(--on-accent);font-weight:500;cursor:pointer}
+.btn:hover{opacity:.88} .btn:disabled{opacity:.45;cursor:default} .btn-full{width:100%} .btn.danger{background:var(--danger)}
+.btn-sm{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--border-strong);border-radius:7px;background:var(--surface);cursor:pointer;font-size:12.5px;white-space:nowrap}
+.btn-sm:hover{background:var(--hover)} .btn-sm.danger{color:var(--danger)} .btn-sm.primary{color:var(--accent)}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid var(--border-strong);border-radius:7px;background:var(--surface);cursor:pointer;color:var(--muted)}
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:12px}
+.filter-field{display:flex;flex-direction:column;min-width:140px} .filter-field.grow{flex:1;min-width:180px}
+.count-line{font-size:11.5px;color:var(--muted);margin:0 2px 10px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:500;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.key-cell{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:11.5px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.key-cell:hover{color:var(--accent)}
+.two-line small{display:block;color:var(--muted);font-size:11px}
+.pill{display:inline-flex;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.danger{background:var(--danger-soft);color:var(--danger)}
+.note{padding:10px 12px;border-radius:8px;background:var(--surface-2);color:var(--muted);font-size:12.5px;margin-bottom:14px;line-height:1.5}
+.note.accent{background:var(--accent-soft);color:var(--accent)} .note.warn{background:var(--warn-soft);color:var(--warn)} .note.danger{background:var(--danger-soft);color:var(--danger)}
+.sel-input{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:14px;letter-spacing:.5px;resize:none;text-align:center}
+.val-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.val-btn{padding:8px 6px;border:1px solid var(--border-strong);border-radius:8px;text-align:center;cursor:pointer;font-size:12.5px;background:var(--surface)}
+.val-btn:hover{background:var(--hover)} .val-btn.sel{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:500}
+#modalOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:70;align-items:center;justify-content:center;padding:20px}
+#modalOverlay.show{display:flex}
+.modal-box{width:100%;max-width:560px;max-height:90vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border-strong);border-radius:14px}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600}
+.modal-x{border:0;background:none;cursor:pointer;color:var(--muted);font-size:16px;padding:2px 6px}
+#modalBody{padding:18px 20px}
+.modal-ft{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}
+#toastWrap{position:fixed;right:18px;bottom:18px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:380px}
+.toast{padding:10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--border-strong);font-size:12.5px}
+.toast.ok{border-left:3px solid var(--ok)} .toast.err{border-left:3px solid var(--danger)} .toast.info{border-left:3px solid var(--accent)}
+@media (max-width:760px){
+  #appMain{flex-direction:column}
+  #sidebar{width:100%;height:auto;position:static;flex-direction:row;flex-wrap:wrap;padding:10px;border-right:0;border-bottom:1px solid var(--border)}
+  .sb-nav{flex-direction:row;overflow-x:auto;flex:1 1 100%;order:3} .nav-item{width:auto;white-space:nowrap}
+  .sb-footer{border:0;padding:0;flex-direction:row;margin-left:auto} .sb-user{display:none}
+  #content{padding:18px 16px 40px} .g2,.g3{grid-template-columns:1fr} .val-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ── INÍCIO: entrar no Google e abrir a base ───────────────── -->
+<div id="inicio">
+  <div class="login-card">
+    <h2>Keygen</h2>
+    <p>Gestor de licenças · v6.2 · base única no Google Drive</p>
+    <div class="note">Clientes, licenças e os <b>segredos dos aplicativos</b> ficam numa base só, na pasta
+      <span class="mono">CHAVES</span> do seu Google Drive, <b>cifrada com a senha da base</b> (nem o Google a lê).
+      O Keygen precisa de internet para <b>emitir</b>. Os apps <b>não</b>: depois de ativada, a chave funciona na
+      máquina do cliente mesmo sem internet.</div>
+    <div id="passoLogin"><button class="btn btn-full" onclick="entrar()">Entrar com Google</button></div>
+    <div id="passoSenha" style="display:none">
+      <div class="group"><label for="senhaBase" id="senhaRotulo">Senha da base</label>
+        <input type="password" id="senhaBase" autocomplete="current-password" onkeydown="if(event.key==='Enter')abrirBase()"></div>
+      <div class="group" id="senhaConfGrupo" style="display:none"><label for="senhaConf">Repita a senha</label>
+        <input type="password" id="senhaConf" autocomplete="new-password" onkeydown="if(event.key==='Enter')abrirBase()"></div>
+      <div class="note warn small" id="senhaAviso" style="display:none">Nenhuma base no seu Drive ainda: será criada uma
+        NOVA. Guarde a senha num gerenciador de senhas: esquecida = base perdida, ninguém consegue recuperar.</div>
+      <button class="btn btn-full" id="btnAbrir" onclick="abrirBase()">Abrir base</button>
+    </div>
+    <div class="note danger small" id="inicioErro" style="display:none;margin:14px 0 0"></div>
+  </div>
+</div>
+
+<!-- ── APP ───────────────────────────────────────────────── -->
+<div id="appMain">
+  <nav id="sidebar">
+    <div class="sb-logo"><b>Keygen</b><span>Gestor v6.2 · Drive</span></div>
+    <div class="sb-nav">
+      <button class="nav-item" id="nav-emitir"     onclick="showSection('emitir')"><span data-ic="plus"></span>Emitir</button>
+      <button class="nav-item" id="nav-licencas"   onclick="showSection('licencas')"><span data-ic="key"></span>Licenças</button>
+      <button class="nav-item" id="nav-clientes"   onclick="showSection('clientes')"><span data-ic="users"></span>Clientes</button>
+      <button class="nav-item" id="nav-pagamentos" onclick="showSection('pagamentos')"><span data-ic="cash"></span>Pagamentos</button>
+      <button class="nav-item" id="nav-apps"       onclick="showSection('apps')"><span data-ic="apps"></span>Aplicativos</button>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-user" id="sbPasta"></div>
+      <button class="btn-sm danger" id="btnReconectar" style="display:none;justify-content:center" onclick="reconectar()">Reconectar Google</button>
+      <button class="btn-sm" style="justify-content:center" onclick="menuBase()">Cópias e importação</button>
+      <div class="btn-row">
+        <button class="icon-btn" id="btnTema" onclick="alternarTema()" title="Alternar tema" aria-label="Alternar tema"></button>
+        <button class="btn-sm" style="flex:1;justify-content:center" onclick="sair()">Sair</button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="content">
+    <!-- EMITIR -->
+    <section id="sec-emitir" style="display:none">
+      <div class="sec-hd"><h2>Emitir licença</h2></div>
+      <div class="card">
+        <div class="g2">
+          <div class="group"><label for="emApp">Aplicativo</label><select id="emApp"></select></div>
+          <div class="group"><label for="emCliente">Cliente</label><select id="emCliente"></select></div>
+        </div>
+        <div class="group"><label for="emMid">Código da máquina (mostrado na tela de ativação do app)</label>
+          <input id="emMid" class="mid-input" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19" oninput="mascaraMid(this)"></div>
+        <div class="group"><label>Validade</label><div class="val-grid" id="emValidade"></div></div>
+        <div class="group" id="emDataGrupo" style="display:none"><label for="emData">Vale até (inclusive)</label><input type="date" id="emData"></div>
+        <div class="group"><label for="emObs">Observação</label><input id="emObs"></div>
+        <div class="g2">
+          <div class="group"><label for="emValor">Valor recebido (opcional)</label><input id="emValor" inputmode="decimal" placeholder="0,00"></div>
+          <div class="group"><label for="emForma">Forma de pagamento</label><select id="emForma"></select></div>
+        </div>
+        <button class="btn" onclick="emitirDaTela()">Gerar chave</button>
+      </div>
+    </section>
+
+    <!-- LICENÇAS -->
+    <section id="sec-licencas" style="display:none">
+      <div class="sec-hd"><h2>Licenças</h2></div>
+      <div class="note">Sem internet não existe revogação: uma chave emitida continua valendo na máquina dela até a data
+        de validade. "Nova chave" e "Transferir" emitem outra chave e marcam a anterior como substituída — só no seu controle.</div>
+      <div class="card">
+        <div class="filter-bar">
+          <div class="filter-field grow"><label for="fBusca">Buscar</label><input id="fBusca" placeholder="cliente, máquina, chave, obs" oninput="renderLicencas()"></div>
+          <div class="filter-field"><label for="fApp">Aplicativo</label><select id="fApp" onchange="renderLicencas()"></select></div>
+          <div class="filter-field"><label for="fSit">Situação</label>
+            <select id="fSit" onchange="renderLicencas()"><option value="">Todas</option><option value="vigente">Vigentes</option>
+              <option value="vence">Vencem em 30 dias</option><option value="vencida">Vencidas</option><option value="substituida">Substituídas</option></select></div>
+        </div>
+        <div class="count-line" id="licCount"></div>
+        <div class="tbl-wrap" id="licTabela"></div>
+      </div>
+    </section>
+
+    <!-- CLIENTES -->
+    <section id="sec-clientes" style="display:none">
+      <div class="sec-hd"><h2>Clientes</h2><button class="btn-sm primary" onclick="formCliente()">Novo cliente</button></div>
+      <div class="card"><div class="tbl-wrap" id="cliTabela"></div></div>
+    </section>
+
+    <!-- PAGAMENTOS -->
+    <section id="sec-pagamentos" style="display:none">
+      <div class="sec-hd"><h2>Pagamentos</h2><button class="btn-sm primary" onclick="formPagamento()">Registrar pagamento</button></div>
+      <div class="card"><div class="count-line" id="pagTotal"></div><div class="tbl-wrap" id="pagTabela"></div></div>
+    </section>
+
+    <!-- APLICATIVOS -->
+    <section id="sec-apps" style="display:none">
+      <div class="sec-hd"><h2>Aplicativos</h2><button class="btn-sm primary" onclick="formApp()">Novo aplicativo</button></div>
+      <div class="note">Cada aplicativo tem um <b>segredo</b> próprio. O mesmo segredo vai embutido no app (receita 19):
+        é com ele que o app confere, sem internet, se a chave foi emitida por você. Trocar o segredo invalida
+        TODAS as chaves já emitidas daquele app.</div>
+      <div class="card"><div class="tbl-wrap" id="appTabela"></div></div>
+    </section>
+  </main>
+</div>
+
+<div id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-hd"><span id="modalTitle"></span><button class="modal-x" onclick="closeModal()" aria-label="Fechar">✕</button></div>
+    <div id="modalBody"></div>
+    <div class="modal-ft" id="modalFt"></div>
+  </div>
+</div>
+<div id="toastWrap"></div>
+
+<script>
+// ══ Formato da chave — FONTE ÚNICA (idêntico ao v5.3; o app confere com a mesma conta) ══
+// 48 hex = machineId(16) + exp(8) + serial(8) + HMAC(16)
+// HMAC-SHA256(segredo do app, "mid|exp|serial"), 16 primeiros hex em maiúsculas.
+// exp = AAAAMMDD da validade (vale até 23:59:59 desse dia) ou 99991231 (vitalícia).
+const VITEXP = '99991231'
+const SERIAL_MAX = 0xFFFFFFEF   // FFFFFFF0..FFFFFFFF ficaram reservados pelas versões online (kill/recuperação)
+async function hmac(msg, secret) {
+  const enc = new TextEncoder()
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name:'HMAC', hash:'SHA-256' }, false, ['sign'])
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(msg))
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase()
+}
+async function montarChave(mid, expHex, serHex, secret) {
+  const sig = (await hmac(mid + '|' + expHex + '|' + serHex, secret)).substring(0, 16)
+  return mid + expHex + serHex + sig
+}
+// Data LOCAL. NUNCA toISOString(): no fuso do Brasil 23:59 local vira o dia seguinte em UTC.
+function localDateStr(d) {
+  if (!d) return ''
+  d = new Date(d)
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+}
+function expDeData(d) { return localDateStr(d).replace(/-/g, '') }
+function dataDoExp(exp) { return exp === VITEXP ? null : new Date(exp.slice(0,4) + '-' + exp.slice(4,6) + '-' + exp.slice(6,8) + 'T23:59:59') }
+function proximoSerialDe(licencas, appId, mid) {
+  const usados = licencas.filter(l => l.app_id === appId && l.machine_id === mid).map(l => parseInt(l.serial, 16))
+  const n = (usados.length ? Math.max(...usados) : 0) + 1
+  return n > SERIAL_MAX ? null : n.toString(16).toUpperCase().padStart(8, '0')
+}
+function novoSegredo() { return Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('') }
+
+// ══ Cifragem da base (AES-GCM 256, chave = PBKDF2-SHA256 da senha). Sal e IV novos a cada gravação. ══
+const FORMATO_CIFRADO = 'keygen-v6-cifrado', KDF_ITER = 600000
+const b64 = bytes => { let s = ''; bytes.forEach(b => { s += String.fromCharCode(b) }); return btoa(s) }
+const deB64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0))
+async function chaveDaSenha(senha, sal, iteracoes) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveKey'])
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: sal, iterations: iteracoes, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt'])
+}
+async function cifrar(obj, senha) {
+  const sal = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12))
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await chaveDaSenha(senha, sal, KDF_ITER), new TextEncoder().encode(JSON.stringify(obj)))
+  return { formato: FORMATO_CIFRADO, kdf: { nome: 'PBKDF2-SHA256', iteracoes: KDF_ITER, sal: b64(sal) }, iv: b64(iv), dados: b64(new Uint8Array(ct)) }
+}
+async function decifrar(env, senha) {
+  if (!env || env.formato !== FORMATO_CIFRADO) throw new Error('Arquivo não é uma base cifrada do Keygen v6.2.')
+  let texto
+  try {
+    const chave = await chaveDaSenha(senha, deB64(env.kdf.sal), env.kdf.iteracoes)
+    texto = new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deB64(env.iv) }, chave, deB64(env.dados)))
+  } catch (e) { throw new Error('Senha incorreta (ou arquivo corrompido).') }
+  return JSON.parse(texto)
+}
+
+// ══ Mesclagem (migração das bases locais antigas para a do Drive) ══
+// União por id. Mesmo APP_ID com segredo DIFERENTE: recusa tudo — escolher errado invalida chaves já
+// vendidas, e essa decisão é do dono. Nada é apagado: divergências e seriais repetidos vão ao relatório.
+function mesclarBases(a, b) {
+  const rel = { novos: { apps: 0, clientes: 0, licencas: 0, pagamentos: 0 }, divergentes: [], serialRepetido: [], bloqueios: [] }
+  const porAppId = (lista, appId) => lista.find(x => x.app_id.toLowerCase() === appId.toLowerCase())
+  for (const ap of b.apps || []) {
+    const x = porAppId(a.apps, ap.app_id)
+    if (x && x.secret_key !== ap.secret_key) rel.bloqueios.push(`Aplicativo ${ap.app_id}: o SEGREDO é diferente nas duas bases. Só uma delas abre as chaves que o app aceita; descubra qual e corrija antes de importar.`)
+  }
+  if (rel.bloqueios.length) return { dados: null, relatorio: rel }
+  const out = structuredClone(a), idDoApp = {}
+  for (const ap of b.apps || []) {
+    const x = porAppId(out.apps, ap.app_id)
+    if (x) idDoApp[ap.id] = x.id
+    else { out.apps.push(structuredClone(ap)); rel.novos.apps++ }
+  }
+  for (const col of ['clientes', 'licencas', 'pagamentos']) {
+    out[col] ||= []
+    for (const reg of b[col] || []) {
+      const r = col === 'licencas' && idDoApp[reg.app_id] ? { ...reg, app_id: idDoApp[reg.app_id] } : reg
+      const ja = out[col].find(x => x.id === r.id)
+      if (!ja) { out[col].push(structuredClone(r)); rel.novos[col]++ }
+      else if (JSON.stringify(ja) !== JSON.stringify(r)) rel.divergentes.push(`${col} ${r.id}: diferente nas duas bases — ficou a versão da base do Drive.`)
+    }
+  }
+  const vistos = new Map()
+  for (const l of out.licencas) {
+    const k = `${l.app_id}|${l.machine_id}|${l.serial}`
+    if (vistos.has(k)) rel.serialRepetido.push(`Máquina ${l.machine_id}, serial ${l.serial}: duas chaves com o mesmo serial (as duas foram mantidas).`)
+    else vistos.set(k, l.id)
+  }
+  return { dados: out, relatorio: rel }
+}
+// ══ fim das funções puras (testes/verifica-keygen-v6.js as carrega daqui) ══
+
+const ICONES = {
+  key:   '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>',
+  plus:  '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+  apps:  '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 12h6M12 9v6"/>',
+  cash:  '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
+  sun:   '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:  '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+}
+function ic(n){ return `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONES[n]||''}</svg>` }
+document.querySelectorAll('[data-ic]').forEach(el => { el.outerHTML = ic(el.dataset.ic) })
+function temaSalvo(){ try { const t = localStorage.getItem('keygen.tema'); return (t==='light'||t==='dark') ? t : null } catch(e){ return null } }
+function aplicarTema(t){
+  const r = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  document.documentElement.dataset.theme = r
+  document.getElementById('btnTema').innerHTML = ic(r==='dark' ? 'sun' : 'moon')
+}
+function alternarTema(){
+  const novo = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
+  try { localStorage.setItem('keygen.tema', novo) } catch(e) {}
+  aplicarTema(novo)
+}
+aplicarTema(temaSalvo())
+
+// ══ Configuração: Client ID do OAuth (Google Cloud → Credenciais → "ID do cliente OAuth", tipo Web,
+// origem = endereço do site). Não é segredo: o Google o mostra a qualquer página que o use. ══
+const GOOGLE_CLIENT_ID = ''
+
+// ══ Armazenamento: Google Drive → CHAVES/keygen-dados.cifrado.json + CHAVES/backups/ ══
+const PASTA = 'CHAVES', ARQ = 'keygen-dados.cifrado.json', MANTER_BACKUPS = 30
+const API = 'https://www.googleapis.com'
+const FORMAS = ['Pix', 'Dinheiro', 'Transferência', 'Boleto', 'Cartão', 'Outra']
+let dados = null, senha = null, fila = Promise.resolve(), secaoAtual = 'emitir'
+let token = null, tokenClient = null, aguardandoToken = null
+// arquivo = onde a base está + a `version` do Drive lida ao abrir (trava contra duas máquinas).
+let arquivo = { pastaId: null, backupsId: null, id: null, version: null }
+let ultimoGravado = null, bloqueio = null
+const vazio = () => ({ versao: 6, criado_em: new Date().toISOString(), apps: [], clientes: [], licencas: [], pagamentos: [] })
+const ehBaseV6 = d => d && d.versao === 6 && Array.isArray(d.apps) && Array.isArray(d.licencas)
+
+function erroInicio(msg) { const el = document.getElementById('inicioErro'); el.textContent = msg; el.style.display = msg ? 'block' : 'none' }
+
+function pedirToken(prompt) {
+  return new Promise((res, rej) => { aguardandoToken = { res, rej }; tokenClient.requestAccessToken({ prompt }) })
+}
+async function entrar() {
+  erroInicio('')
+  if (!GOOGLE_CLIENT_ID) { erroInicio('Falta configurar o GOOGLE_CLIENT_ID neste arquivo (ver o guia do Keygen v6.2).'); return }
+  if (!window.google?.accounts?.oauth2) { erroInicio('Não carregou o login do Google. Sem internet o Keygen não abre: conecte-se e recarregue (F5).'); return }
+  tokenClient ||= google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.file',
+    callback: r => { const a = aguardandoToken; aguardandoToken = null; if (r.error) a?.rej(new Error(r.error)); else { token = r.access_token; a?.res() } },
+    error_callback: e => { const a = aguardandoToken; aguardandoToken = null; a?.rej(new Error(e.type === 'popup_closed' ? 'Login cancelado.' : 'Login do Google falhou (' + e.type + ').')) },
+  })
+  try {
+    await pedirToken('')
+    arquivo.pastaId = await pastaNoDrive(PASTA, null)
+    arquivo.backupsId = await pastaNoDrive('backups', arquivo.pastaId)
+    const bases = await acharNoDrive(`name='${ARQ}' and '${arquivo.pastaId}' in parents and trashed=false`)
+    // Duas bases na pasta = alguém criou uma por fora: não escolho por você.
+    if (bases.length > 1) { erroInicio(`Há ${bases.length} arquivos ${ARQ} na pasta ${PASTA} do Drive. Deixe só um e entre de novo.`); return }
+    arquivo.id = bases[0]?.id || null
+    arquivo.version = bases[0]?.version || null
+  } catch (e) { erroInicio(e.message); return }
+  const nova = !arquivo.id
+  document.getElementById('passoLogin').style.display = 'none'
+  document.getElementById('passoSenha').style.display = ''
+  document.getElementById('senhaRotulo').textContent = nova ? 'Senha da base NOVA (mínimo 10 caracteres)' : 'Senha da base'
+  document.getElementById('senhaConfGrupo').style.display = nova ? '' : 'none'
+  document.getElementById('senhaAviso').style.display = nova ? '' : 'none'
+  document.getElementById('btnAbrir').textContent = nova ? 'Criar base no Drive' : 'Abrir base'
+  document.getElementById('senhaBase').focus()
+}
+async function abrirBase() {
+  erroInicio('')
+  const s = document.getElementById('senhaBase').value
+  try {
+    if (arquivo.id) {
+      const lido = await decifrar(await drive(`/drive/v3/files/${arquivo.id}?alt=media`), s)
+      if (!ehBaseV6(lido)) throw new Error('A base do Drive não tem o formato do Keygen v6.')
+      dados = lido
+    } else {
+      if (s.length < 10) throw new Error('A senha precisa de pelo menos 10 caracteres.')
+      if (s !== document.getElementById('senhaConf').value) throw new Error('As duas senhas não conferem.')
+      dados = vazio()
+    }
+  } catch (e) { erroInicio(e.message); return }
+  senha = s
+  dados.clientes ||= []; dados.pagamentos ||= []
+  ultimoGravado = JSON.stringify(dados)
+  if (!arquivo.id) { try { await salvar() } catch (e) { erroInicio(e.message); return } }
+  document.getElementById('senhaBase').value = ''; document.getElementById('senhaConf').value = ''
+  document.getElementById('inicio').style.display = 'none'
+  document.getElementById('appMain').style.display = 'flex'
+  document.getElementById('sbPasta').textContent = 'Google Drive · ' + PASTA
+  montarSelects(); showSection(dados.apps.length ? 'emitir' : 'apps')
+}
+async function reconectar() {
+  try { await pedirToken(''); document.getElementById('btnReconectar').style.display = 'none'; toast('Reconectado. Repita a última ação.', 'ok') }
+  catch (e) { toast(e.message, 'err') }
+}
+function sair() {
+  if (token && window.google?.accounts?.oauth2) google.accounts.oauth2.revoke(token, () => {})
+  location.reload()
+}
+
+// ── Google Drive (REST v3). Escopo drive.file: só enxerga o que o próprio Keygen criou. ──
+async function drive(caminho, opc = {}) {
+  let r
+  try { r = await fetch(API + caminho, { ...opc, headers: { Authorization: 'Bearer ' + token, ...(opc.headers || {}) } }) }
+  catch (e) { throw new Error('Sem conexão com o Google Drive. O Keygen só grava com internet.') }
+  if (r.status === 401) { document.getElementById('btnReconectar').style.display = ''; throw new Error('A sessão do Google expirou. Clique em "Reconectar Google" e repita a ação.') }
+  if (!r.ok) throw new Error(`Google Drive respondeu ${r.status}: ${(await r.text()).slice(0, 200)}`)
+  return r.status === 204 ? null : r.json()
+}
+async function acharNoDrive(q) {
+  const p = new URLSearchParams({ q, fields: 'files(id,name,version)', spaces: 'drive', orderBy: 'name desc', pageSize: '1000' })
+  return (await drive('/drive/v3/files?' + p)).files
+}
+async function pastaNoDrive(nome, paiId) {
+  const ja = await acharNoDrive(`name='${nome}' and mimeType='application/vnd.google-apps.folder' and trashed=false and '${paiId || 'root'}' in parents`)
+  if (ja.length) return ja[0].id
+  return (await drive('/drive/v3/files?fields=id', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: nome, mimeType: 'application/vnd.google-apps.folder', ...(paiId ? { parents: [paiId] } : {}) }) })).id
+}
+function criarNoDrive(nome, paiId, conteudo) {
+  const lim = 'kg' + crypto.randomUUID()
+  const corpo = `--${lim}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: nome, parents: [paiId], mimeType: 'application/json' })}\r\n` +
+    `--${lim}\r\nContent-Type: application/json\r\n\r\n${conteudo}\r\n--${lim}--`
+  return drive('/upload/drive/v3/files?uploadType=multipart&fields=id,version', { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${lim}` }, body: corpo })
+}
+
+// Gravações em fila: duas ações seguidas não podem gravar fora de ordem. Cada uma grava o retrato
+// de `dados` do momento em que foi pedida.
+// Se NÃO gravar, `dados` volta ao último estado gravado: nada fica só na memória (uma chave que
+// não está no Drive nunca é mostrada ao usuário — `emitir` aguarda esta promessa).
+function salvar() {
+  const json = JSON.stringify(dados)
+  fila = fila.catch(() => {}).then(async () => {
+    if (bloqueio) throw new Error(bloqueio)
+    const conteudo = JSON.stringify(await cifrar(JSON.parse(json), senha))
+    if (arquivo.id) {
+      // shortcut: entre conferir a version e gravar há ~1 s; basta para um emissor só. Com vários,
+      // trocar por um arquivo de trava.
+      const atual = await drive(`/drive/v3/files/${arquivo.id}?fields=version`)
+      if (atual.version !== arquivo.version) {
+        bloqueio = 'A base foi alterada em outra máquina (ou aba) depois que você a abriu. Nada foi gravado: recarregue a página (F5) e repita.'
+        throw new Error(bloqueio)
+      }
+      arquivo.version = (await drive(`/upload/drive/v3/files/${arquivo.id}?uploadType=media&fields=version`,
+        { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: conteudo })).version
+    } else {
+      const novo = await criarNoDrive(ARQ, arquivo.pastaId, conteudo)
+      arquivo.id = novo.id; arquivo.version = novo.version
+    }
+    ultimoGravado = json
+    const carimbo = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15)
+    await criarNoDrive(`keygen-dados-${carimbo}.cifrado.json`, arquivo.backupsId, conteudo)
+    const antigos = (await acharNoDrive(`'${arquivo.backupsId}' in parents and name contains 'keygen-dados-' and trashed=false`)).slice(MANTER_BACKUPS)
+    for (const f of antigos) drive(`/drive/v3/files/${f.id}`, { method: 'DELETE' }).catch(() => {})
+  })
+  return fila.catch(e => {
+    dados = JSON.parse(ultimoGravado)
+    if (document.getElementById('appMain').style.display === 'flex') { montarSelects(); showSection(secaoAtual) }
+    toast('NÃO GRAVOU: ' + e.message, 'err'); throw e
+  })
+}
+
+// ══ Cópias e importação ══
+function baixar(nome, texto) {
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([texto], { type: 'application/json' })); a.download = nome
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000)
+}
+function menuBase() {
+  abrirModal('Cópias e importação', `
+    <div class="group"><b>Baixar cópia cifrada</b><div class="small muted">Guarda a base inteira fora do Drive (pen drive, outro disco). Abre com a mesma senha.</div>
+      <button class="btn-sm" style="margin-top:6px" onclick="baixarCopia()">Baixar cópia</button></div>
+    <div class="group"><b>Importar bases antigas (v6.0, por pasta)</b><div class="small muted">Escolha os <span class="mono">keygen-dados.json</span> do PC e do pen drive:
+      eles são JUNTADOS à base do Drive (nada é apagado). Você vê o relatório antes de gravar.</div>
+      <input type="file" id="arqImportar" accept=".json" multiple style="margin-top:6px" onchange="importarBases(this.files)"></div>
+    <div class="group"><b>Restaurar de uma cópia cifrada</b><div class="small muted">SUBSTITUI a base do Drive pela cópia. O estado atual continua em <span class="mono">backups/</span>.</div>
+      <input type="file" id="arqRestaurar" accept=".json" style="margin-top:6px" onchange="restaurarCopia(this.files[0])"></div>`, '')
+}
+async function baixarCopia() {
+  const carimbo = localDateStr(new Date()).replace(/-/g, '')
+  baixar(`keygen-copia-${carimbo}.cifrado.json`, JSON.stringify(await cifrar(dados, senha)))
+}
+// Arquivo de base: v6.0 em texto puro, ou cifrado (tenta a senha atual; se não abrir, pergunta).
+async function lerArquivoBase(f) {
+  const obj = JSON.parse(await f.text())
+  if (obj?.formato !== FORMATO_CIFRADO) return obj
+  try { return await decifrar(obj, senha) }
+  catch (e) { const outra = prompt(`${f.name} tem outra senha. Digite-a:`); if (outra === null) throw new Error('Cancelado.'); return decifrar(obj, outra) }
+}
+let mesclaPendente = null
+async function importarBases(arquivos) {
+  let base = structuredClone(dados)
+  const rel = { novos: { apps: 0, clientes: 0, licencas: 0, pagamentos: 0 }, divergentes: [], serialRepetido: [], bloqueios: [] }
+  try {
+    for (const f of arquivos) {
+      const lido = await lerArquivoBase(f)
+      if (!ehBaseV6(lido)) throw new Error(`${f.name} não é uma base do Keygen v6.`)
+      const r = mesclarBases(base, lido)
+      for (const k in r.relatorio.novos) rel.novos[k] += r.relatorio.novos[k]
+      ;['divergentes', 'serialRepetido', 'bloqueios'].forEach(k => rel[k].push(...r.relatorio[k].map(m => `${f.name}: ${m}`)))
+      if (!r.dados) break
+      base = r.dados
+    }
+  } catch (e) { toast(e.message, 'err'); return }
+  mesclaPendente = rel.bloqueios.length ? null : base
+  const lista = (t, xs) => xs.length ? `<div class="group"><b>${t}</b><ul class="small" style="margin:4px 0 0 18px">${xs.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''
+  abrirModal('Relatório da importação', `
+    ${rel.bloqueios.length ? '<div class="note danger">Importação RECUSADA. Nada foi gravado.</div>' : ''}
+    ${lista('Bloqueios', rel.bloqueios)}
+    <div class="note">Novos: ${rel.novos.apps} aplicativo(s), ${rel.novos.clientes} cliente(s), ${rel.novos.licencas} licença(s), ${rel.novos.pagamentos} pagamento(s).</div>
+    ${lista('Registros diferentes (ficou a versão do Drive)', rel.divergentes)}
+    ${lista('Seriais repetidos', rel.serialRepetido)}`,
+    mesclaPendente ? `<button class="btn" onclick="gravarImportacao()">Gravar no Drive</button>` : '')
+}
+async function gravarImportacao() {
+  if (!mesclaPendente) return
+  dados = mesclaPendente; mesclaPendente = null
+  try { await salvar() } catch (e) { return }
+  closeModal(); montarSelects(); showSection(secaoAtual); toast('Bases importadas e gravadas no Drive.', 'ok')
+}
+async function restaurarCopia(f) {
+  if (!f) return
+  let lido
+  try { lido = await lerArquivoBase(f); if (!ehBaseV6(lido)) throw new Error(`${f.name} não é uma base do Keygen v6.`) }
+  catch (e) { toast(e.message, 'err'); return }
+  const resp = prompt(`Substituir a base do Drive por ${f.name} (${lido.licencas.length} licença(s))?\nO estado atual fica em backups/.\n\nDigite RESTAURAR para confirmar:`)
+  if (resp?.trim().toUpperCase() !== 'RESTAURAR') { toast('Nada foi alterado.', 'info'); return }
+  lido.clientes ||= []; lido.pagamentos ||= []
+  dados = lido
+  try { await salvar() } catch (e) { return }
+  closeModal(); montarSelects(); showSection(secaoAtual); toast('Base restaurada.', 'ok')
+}
+
+// ══ Navegação e selects ══
+function showSection(s) {
+  secaoAtual = s
+  ;['emitir','licencas','clientes','pagamentos','apps'].forEach(x => {
+    document.getElementById('sec-' + x).style.display = x === s ? '' : 'none'
+    document.getElementById('nav-' + x).classList.toggle('active', x === s)
+  })
+  ;({ licencas: renderLicencas, clientes: renderClientes, pagamentos: renderPagamentos, apps: renderApps })[s]?.()
+}
+const appPorId = id => dados.apps.find(a => a.id === id)
+const cliPorId = id => dados.clientes.find(c => c.id === id)
+const nomeCli = c => c ? (c.empresa ? `${c.nome} — ${c.empresa}` : c.nome) : '—'
+function opcoes(lista, rot, vazioTxt) { return (vazioTxt ? `<option value="">${esc(vazioTxt)}</option>` : '') + lista.map(x => `<option value="${esc(x.id)}">${esc(rot(x))}</option>`).join('') }
+function montarSelects() {
+  const ativos = dados.apps.filter(a => a.status === 'ativo')
+  document.getElementById('emApp').innerHTML = opcoes(ativos, a => `${a.nome} (${a.app_id})`, ativos.length ? '' : 'Cadastre um aplicativo')
+  document.getElementById('emCliente').innerHTML = opcoes([...dados.clientes].sort((a,b) => a.nome.localeCompare(b.nome)), nomeCli, 'Selecione o cliente')
+  document.getElementById('fApp').innerHTML = opcoes(dados.apps, a => a.nome, 'Todos')
+  document.getElementById('emForma').innerHTML = FORMAS.map(f => `<option>${f}</option>`).join('')
+  document.getElementById('emValidade').innerHTML = validadeBotoes('em')
+}
+
+// ══ Validade (Emitir, Nova chave, Transferir) ══
+const VALIDADES = [['1','1 ano'],['2','2 anos'],['3','3 anos'],['data','Data'],['vit','Vitalícia']]
+const valSel = {}
+function validadeBotoes(pref) {
+  return VALIDADES.map(([v, t]) => `<div class="val-btn" data-v="${v}" onclick="escolherValidade('${pref}','${v}',this)">${t}</div>`).join('')
+}
+function escolherValidade(pref, v, el) {
+  valSel[pref] = v
+  el.parentElement.querySelectorAll('.val-btn').forEach(b => b.classList.toggle('sel', b === el))
+  const g = document.getElementById(pref + 'DataGrupo')
+  g.style.display = v === 'data' ? '' : 'none'
+  if (v === 'data' && !document.getElementById(pref + 'Data').value) { const d = new Date(); d.setFullYear(d.getFullYear() + 1); document.getElementById(pref + 'Data').value = localDateStr(d) }
+}
+// Devolve { exp, tipo } ou null (com toast).
+function lerValidade(pref) {
+  const v = valSel[pref]
+  if (!v) { toast('Escolha a validade.', 'err'); return null }
+  if (v === 'vit') return { exp: VITEXP, tipo: 'Vitalícia' }
+  if (v === 'data') {
+    const dv = document.getElementById(pref + 'Data').value
+    if (!dv) { toast('Informe a data.', 'err'); return null }
+    const d = new Date(dv + 'T23:59:59')
+    if (d < new Date()) { toast('A data já passou.', 'err'); return null }
+    return { exp: dv.replace(/-/g, ''), tipo: 'Até ' + dv.split('-').reverse().join('/') }
+  }
+  const d = new Date(); d.setFullYear(d.getFullYear() + Number(v))
+  return { exp: expDeData(d), tipo: v === '1' ? '1 ano' : v + ' anos' }
+}
+
+// ══ Emissão (fonte única: Emitir, Nova chave e Transferir passam por aqui) ══
+function mascaraMid(el) {
+  const v = el.value.replace(/[^0-9a-fA-F]/g, '').toUpperCase().slice(0, 16)
+  el.value = (v.match(/.{1,4}/g) || []).join('-')
+}
+function lerMid(id) {
+  const v = document.getElementById(id).value.replace(/-/g, '').trim().toUpperCase()
+  return /^[A-F0-9]{16}$/.test(v) ? v : null
+}
+async function emitir({ app, clienteId, mid, exp, tipo, obs, anterior }) {
+  const serial = proximoSerialDe(dados.licencas, app.id, mid)
+  if (!serial) { toast('Serial máximo atingido para esta máquina.', 'err'); return null }
+  const lic = { id: crypto.randomUUID(), app_id: app.id, cliente_id: clienteId, machine_id: mid, exp, serial,
+    chave: await montarChave(mid, exp, serial, app.secret_key), tipo_plano: tipo, obs: obs || null,
+    emitida_em: new Date().toISOString(), substituida_por: null }
+  dados.licencas.push(lic)
+  if (anterior) anterior.substituida_por = lic.id
+  await salvar()
+  return lic
+}
+async function emitirDaTela() {
+  const app = appPorId(document.getElementById('emApp').value)
+  const clienteId = document.getElementById('emCliente').value
+  const mid = lerMid('emMid')
+  if (!app) { toast('Escolha o aplicativo.', 'err'); return }
+  if (!clienteId) { toast('Escolha o cliente.', 'err'); return }
+  if (!mid) { toast('Código da máquina inválido. Use XXXX-XXXX-XXXX-XXXX.', 'err'); return }
+  const val = lerValidade('em'); if (!val) return
+  const valor = lerValor('emValor'); if (valor === false) return
+  const lic = await emitir({ app, clienteId, mid, ...val, obs: document.getElementById('emObs').value.trim() })
+  if (!lic) return
+  if (valor) { dados.pagamentos.push({ id: crypto.randomUUID(), licenca_id: lic.id, cliente_id: clienteId, valor,
+    forma: document.getElementById('emForma').value, data: localDateStr(new Date()), obs: null }); await salvar() }
+  ;['emMid', 'emObs', 'emValor'].forEach(id => document.getElementById(id).value = '')
+  mostrarChave(lic, 'Chave emitida')
+}
+function lerValor(id) {
+  const t = document.getElementById(id).value.trim()
+  if (!t) return 0
+  const n = Number(t.replace(/\./g, '').replace(',', '.'))
+  if (!(n > 0)) { toast('Valor inválido.', 'err'); return false }
+  return Math.round(n * 100) / 100
+}
+function mostrarChave(lic, titulo) {
+  const app = appPorId(lic.app_id)
+  abrirModal(titulo, `
+    <div class="note accent">Entregue esta chave ao cliente. Ela só ativa a máquina <span class="mono">${fmtKey(lic.machine_id)}</span>.</div>
+    <textarea id="chaveGerada" class="sel-input" rows="2" readonly>${fmtKey(lic.chave)}</textarea>
+    <div class="small muted" style="margin-top:10px">${esc(app?.nome)} · ${esc(nomeCli(cliPorId(lic.cliente_id)))} · ${esc(lic.tipo_plano)} · serial ${esc(lic.serial)}</div>`,
+    `<button class="btn" onclick="copyText(document.getElementById('chaveGerada').value)">Copiar chave</button>`)
+}
+
+// ══ Licenças ══
+function situacao(l) {
+  if (l.substituida_por) return ['substituida', 'Substituída', '']
+  const d = dataDoExp(l.exp)
+  if (!d) return ['vigente', 'Vitalícia', 'ok']
+  if (d < new Date()) return ['vencida', 'Vencida', 'danger']
+  if (d - new Date() < 30 * 86400000) return ['vence', 'Vence em ' + Math.ceil((d - new Date()) / 86400000) + ' d', 'warn']
+  return ['vigente', 'Vigente', 'ok']
+}
+function renderLicencas() {
+  const busca = document.getElementById('fBusca').value.trim().toLowerCase()
+  const fApp = document.getElementById('fApp').value, fSit = document.getElementById('fSit').value
+  const lista = dados.licencas.filter(l => {
+    const [sit] = situacao(l)
+    if (fApp && l.app_id !== fApp) return false
+    if (fSit && !(fSit === sit || (fSit === 'vigente' && sit === 'vence'))) return false
+    if (!busca) return true
+    return [nomeCli(cliPorId(l.cliente_id)), l.machine_id, l.chave, l.obs, appPorId(l.app_id)?.nome].join(' ').toLowerCase().replace(/-/g, '').includes(busca.replace(/-/g, ''))
+  }).sort((a, b) => b.emitida_em.localeCompare(a.emitida_em))
+  document.getElementById('licCount').textContent = `${lista.length} de ${dados.licencas.length} licença(s)`
+  document.getElementById('licTabela').innerHTML = !lista.length ? '<div class="empty">Nenhuma licença.</div>' : `
+    <table><thead><tr><th>Cliente</th><th>Aplicativo</th><th>Máquina</th><th>Validade</th><th>Situação</th><th>Chave</th><th></th></tr></thead><tbody>
+    ${lista.map(l => { const [, rot, cls] = situacao(l), d = dataDoExp(l.exp); return `<tr>
+      <td class="two-line">${esc(nomeCli(cliPorId(l.cliente_id)))}<small>emitida ${fmtDate(l.emitida_em)}${l.obs ? ' · ' + esc(l.obs) : ''}</small></td>
+      <td>${esc(appPorId(l.app_id)?.nome || '?')}</td>
+      <td class="mono small">${fmtKey(l.machine_id)}</td>
+      <td>${d ? d.toLocaleDateString('pt-BR') : 'Vitalícia'}</td>
+      <td><span class="pill ${cls}">${rot}</span></td>
+      <td class="key-cell" title="Copiar" onclick="copyText(${jsArg(fmtKey(l.chave))})">${fmtKey(l.chave).slice(0, 19)}…</td>
+      <td><div class="btn-row">${l.substituida_por ? '' : `
+        <button class="btn-sm" onclick="formNovaChave(${jsArg(l.id)}, false)">Nova chave</button>
+        <button class="btn-sm" onclick="formNovaChave(${jsArg(l.id)}, true)">Transferir</button>`}
+        <button class="btn-sm" onclick="mostrarChave(dados.licencas.find(x => x.id === ${jsArg(l.id)}), 'Chave')">Ver</button></div></td>
+    </tr>` }).join('')}</tbody></table>`
+}
+function formNovaChave(id, transferir) {
+  const l = dados.licencas.find(x => x.id === id)
+  abrirModal(transferir ? 'Transferir para outra máquina' : 'Nova chave (nova validade)', `
+    <div class="note">${transferir ? 'Emite uma chave para OUTRA máquina.' : 'Emite uma chave para a MESMA máquina, com nova validade.'}
+      A chave atual fica marcada como substituída, mas <b>continua funcionando</b> onde já está até vencer (sem internet não há revogação).</div>
+    ${transferir ? `<div class="group"><label for="nkMid">Código da nova máquina</label><input id="nkMid" class="mid-input" maxlength="19" placeholder="XXXX-XXXX-XXXX-XXXX" oninput="mascaraMid(this)"></div>` : ''}
+    <div class="group"><label>Validade</label><div class="val-grid">${validadeBotoes('nk')}</div></div>
+    <div class="group" id="nkDataGrupo" style="display:none"><label for="nkData">Vale até (inclusive)</label><input type="date" id="nkData"></div>
+    <div class="group"><label for="nkObs">Observação</label><input id="nkObs" value="${esc(l.obs || '')}"></div>`,
+    `<button class="btn" onclick="confirmarNovaChave(${jsArg(id)}, ${transferir})">Emitir</button>`)
+  valSel.nk = null
+}
+async function confirmarNovaChave(id, transferir) {
+  const l = dados.licencas.find(x => x.id === id), app = appPorId(l.app_id)
+  if (!app) { toast('Aplicativo desta licença não existe mais no cadastro.', 'err'); return }
+  const mid = transferir ? lerMid('nkMid') : l.machine_id
+  if (!mid) { toast('Código da máquina inválido.', 'err'); return }
+  if (transferir && mid === l.machine_id) { toast('É a mesma máquina. Use "Nova chave".', 'err'); return }
+  const val = lerValidade('nk'); if (!val) return
+  const nova = await emitir({ app, clienteId: l.cliente_id, mid, ...val, obs: document.getElementById('nkObs').value.trim(), anterior: l })
+  if (nova) { renderLicencas(); mostrarChave(nova, transferir ? 'Chave da nova máquina' : 'Nova chave') }
+}
+
+// ══ Clientes ══
+function renderClientes() {
+  const lista = [...dados.clientes].sort((a, b) => a.nome.localeCompare(b.nome))
+  document.getElementById('cliTabela').innerHTML = !lista.length ? '<div class="empty">Nenhum cliente.</div>' : `
+    <table><thead><tr><th>Nome</th><th>Empresa</th><th>Documento</th><th>Contato</th><th>Licenças</th><th></th></tr></thead><tbody>
+    ${lista.map(c => `<tr><td>${esc(c.nome)}</td><td>${esc(c.empresa)}</td><td>${esc(c.documento)}</td>
+      <td class="two-line">${esc(c.email)}<small>${esc(c.telefone)}</small></td>
+      <td>${dados.licencas.filter(l => l.cliente_id === c.id && !l.substituida_por).length}</td>
+      <td><button class="btn-sm" onclick="formCliente(${jsArg(c.id)})">Editar</button></td></tr>`).join('')}</tbody></table>`
+}
+const CAMPOS_CLI = [['nome','Nome *'],['empresa','Empresa / órgão'],['documento','CPF / CNPJ'],['email','E-mail'],['telefone','Telefone'],['obs','Observação']]
+function formCliente(id) {
+  const c = id ? cliPorId(id) : {}
+  abrirModal(id ? 'Editar cliente' : 'Novo cliente', CAMPOS_CLI.map(([k, t]) =>
+    `<div class="group"><label for="cli_${k}">${t}</label><input id="cli_${k}" value="${esc(c[k] || '')}"></div>`).join(''),
+    `<button class="btn" onclick="salvarCliente(${jsArg(id || '')})">Salvar</button>`)
+}
+async function salvarCliente(id) {
+  const v = Object.fromEntries(CAMPOS_CLI.map(([k]) => [k, document.getElementById('cli_' + k).value.trim()]))
+  if (!v.nome) { toast('Informe o nome.', 'err'); return }
+  if (id) Object.assign(cliPorId(id), v)
+  else dados.clientes.push({ id: crypto.randomUUID(), criado_em: new Date().toISOString(), ...v })
+  await salvar(); closeModal(); montarSelects(); renderClientes(); toast('Cliente salvo.', 'ok')
+}
+
+// ══ Pagamentos ══
+function renderPagamentos() {
+  const lista = [...dados.pagamentos].sort((a, b) => (b.data || '').localeCompare(a.data || ''))
+  const total = lista.reduce((s, p) => s + p.valor, 0)
+  document.getElementById('pagTotal').textContent = `${lista.length} pagamento(s) · total ${moeda(total)}`
+  document.getElementById('pagTabela').innerHTML = !lista.length ? '<div class="empty">Nenhum pagamento.</div>' : `
+    <table><thead><tr><th>Data</th><th>Cliente</th><th>Licença</th><th>Valor</th><th>Forma</th><th>Obs.</th><th></th></tr></thead><tbody>
+    ${lista.map(p => { const l = dados.licencas.find(x => x.id === p.licenca_id); return `<tr>
+      <td>${p.data ? p.data.split('-').reverse().join('/') : '—'}</td><td>${esc(nomeCli(cliPorId(p.cliente_id)))}</td>
+      <td class="small">${l ? esc(appPorId(l.app_id)?.nome) + ' · ' + fmtKey(l.machine_id) : '—'}</td>
+      <td>${moeda(p.valor)}</td><td>${esc(p.forma)}</td><td>${esc(p.obs)}</td>
+      <td><button class="btn-sm danger" onclick="excluirPagamento(${jsArg(p.id)})">Excluir</button></td></tr>` }).join('')}</tbody></table>`
+}
+function formPagamento() {
+  const lics = dados.licencas.filter(l => !l.substituida_por)
+  abrirModal('Registrar pagamento', `
+    <div class="group"><label for="pgCli">Cliente *</label><select id="pgCli">${opcoes(dados.clientes, nomeCli, 'Selecione')}</select></div>
+    <div class="group"><label for="pgLic">Licença (opcional)</label><select id="pgLic">${opcoes(lics, l => `${appPorId(l.app_id)?.nome} · ${nomeCli(cliPorId(l.cliente_id))} · ${fmtKey(l.machine_id)}`, '—')}</select></div>
+    <div class="g3"><div class="group"><label for="pgValor">Valor *</label><input id="pgValor" inputmode="decimal"></div>
+      <div class="group"><label for="pgForma">Forma</label><select id="pgForma">${FORMAS.map(f => `<option>${f}</option>`).join('')}</select></div>
+      <div class="group"><label for="pgData">Data</label><input type="date" id="pgData" value="${localDateStr(new Date())}"></div></div>
+    <div class="group"><label for="pgObs">Observação</label><input id="pgObs"></div>`,
+    `<button class="btn" onclick="salvarPagamento()">Salvar</button>`)
+}
+async function salvarPagamento() {
+  const cliente_id = document.getElementById('pgCli').value, valor = lerValor('pgValor')
+  if (!cliente_id) { toast('Escolha o cliente.', 'err'); return }
+  if (!valor) { if (valor === 0) toast('Informe o valor.', 'err'); return }
+  dados.pagamentos.push({ id: crypto.randomUUID(), cliente_id, licenca_id: document.getElementById('pgLic').value || null, valor,
+    forma: document.getElementById('pgForma').value, data: document.getElementById('pgData').value, obs: document.getElementById('pgObs').value.trim() || null })
+  await salvar(); closeModal(); renderPagamentos(); toast('Pagamento registrado.', 'ok')
+}
+async function excluirPagamento(id) {
+  if (!confirm('Excluir este pagamento? (fica nas cópias de backup do Drive)')) return
+  dados.pagamentos = dados.pagamentos.filter(p => p.id !== id)
+  await salvar(); renderPagamentos()
+}
+const moeda = n => (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+// ══ Aplicativos ══
+function renderApps() {
+  document.getElementById('appTabela').innerHTML = !dados.apps.length ? '<div class="empty">Cadastre o primeiro aplicativo.</div>' : `
+    <table><thead><tr><th>Nome</th><th>APP_ID</th><th>Situação</th><th>Licenças</th><th>Segredo</th><th></th></tr></thead><tbody>
+    ${dados.apps.map(a => `<tr><td>${esc(a.nome)}</td><td class="mono">${esc(a.app_id)}</td>
+      <td><span class="pill ${a.status === 'ativo' ? 'ok' : ''}">${a.status === 'ativo' ? 'Ativo' : 'Inativo'}</span></td>
+      <td>${dados.licencas.filter(l => l.app_id === a.id).length}</td>
+      <td class="mono small">${esc(a.secret_key.slice(0, 8))}…</td>
+      <td><div class="btn-row"><button class="btn-sm" onclick="copyText(${jsArg(a.secret_key)})">Copiar segredo</button>
+        <button class="btn-sm" onclick="exportarParaEmbutir(${jsArg(a.id)})">Exportar para embutir</button>
+        <button class="btn-sm" onclick="formApp(${jsArg(a.id)})">Editar</button>
+        <button class="btn-sm danger" onclick="trocarSegredo(${jsArg(a.id)})">Trocar segredo</button></div></td></tr>`).join('')}</tbody></table>`
+}
+function formApp(id) {
+  const a = id ? appPorId(id) : { status: 'ativo' }
+  abrirModal(id ? 'Editar aplicativo' : 'Novo aplicativo', `
+    <div class="group"><label for="apNome">Nome *</label><input id="apNome" value="${esc(a.nome || '')}"></div>
+    <div class="group"><label for="apId">APP_ID * (o mesmo nome que o app usa, ex.: ELECTORAL_APP)</label>
+      <input id="apId" class="mono" value="${esc(a.app_id || '')}" ${id ? 'readonly' : ''}></div>
+    <div class="group"><label for="apSt">Situação</label><select id="apSt">
+      <option value="ativo" ${a.status === 'ativo' ? 'selected' : ''}>Ativo (aparece em Emitir)</option>
+      <option value="inativo" ${a.status !== 'ativo' ? 'selected' : ''}>Inativo</option></select></div>
+    ${id ? '' : `<div class="group"><label for="apSeg">Segredo existente (só se o app JÁ tem um embutido; vazio = gerar um novo)</label>
+      <input id="apSeg" class="mono" autocomplete="off" placeholder="64 caracteres hexadecimais"></div>
+      <div class="note">Vazio: um segredo novo e aleatório é gerado ao salvar. Copie-o e embuta no app (receita 19).</div>`}`,
+    `<button class="btn" onclick="salvarApp(${jsArg(id || '')})">Salvar</button>`)
+}
+async function salvarApp(id) {
+  const nome = document.getElementById('apNome').value.trim()
+  // Exatamente como o app escreve (ex.: AthronX_APP): o cadastro tem de bater com o código do app.
+  const app_id = document.getElementById('apId').value.trim()
+  const status = document.getElementById('apSt').value
+  if (!nome || !/^[A-Za-z0-9_]{3,40}$/.test(app_id)) { toast('Informe o nome e um APP_ID (letras, números e _).', 'err'); return }
+  if (id) Object.assign(appPorId(id), { nome, status })
+  else {
+    if (dados.apps.some(a => a.app_id.toLowerCase() === app_id.toLowerCase())) { toast('Já existe um aplicativo com esse APP_ID.', 'err'); return }
+    const seg = document.getElementById('apSeg').value.trim().toLowerCase()
+    if (seg && !/^[0-9a-f]{64}$/.test(seg)) { toast('Segredo existente deve ter 64 caracteres hexadecimais.', 'err'); return }
+    dados.apps.push({ id: crypto.randomUUID(), app_id, nome, status, secret_key: seg || novoSegredo(), criado_em: new Date().toISOString() })
+  }
+  await salvar(); closeModal(); montarSelects(); renderApps(); toast('Aplicativo salvo.', 'ok')
+}
+// O script de cada app (`npm run embutir-segredo-licenca -- "<pasta>"`) lê <pasta>\keygen-dados.json em texto
+// puro. Com a base cifrada no Drive, este arquivo traz SÓ este app e o segredo dele — os apps não mudam.
+function exportarParaEmbutir(id) {
+  const a = appPorId(id)
+  if (!confirm(`Baixar keygen-dados.json só com ${a.app_id} e o SEGREDO dele, em texto puro?\n\nMova-o para uma pasta só dele, rode o script de embutir apontando para essa pasta e APAGUE o arquivo depois.`)) return
+  baixar('keygen-dados.json', JSON.stringify({ versao: 6, exportado_para_embutir: a.app_id, criado_em: new Date().toISOString(),
+    apps: [{ app_id: a.app_id, nome: a.nome, status: a.status, secret_key: a.secret_key }], clientes: [], licencas: [], pagamentos: [] }, null, 2))
+}
+async function trocarSegredo(id) {
+  const a = appPorId(id), n = dados.licencas.filter(l => l.app_id === id).length
+  const resp = prompt(`TROCAR O SEGREDO de ${a.nome} invalida as ${n} chave(s) já emitidas: o app com o segredo novo recusa todas elas, e você terá de reemitir e atualizar o app.\n\nPara confirmar, digite o APP_ID (${a.app_id}):`)
+  if (resp === null) return
+  if (resp.trim().toUpperCase() !== a.app_id) { toast('APP_ID não confere. Nada foi alterado.', 'err'); return }
+  a.secret_key = novoSegredo(); a.segredo_trocado_em = new Date().toISOString()
+  await salvar(); renderApps(); toast('Segredo trocado. Copie o novo e atualize o app.', 'ok')
+}
+
+// ══ Utilitários (do v5.3) ══
+function fmtDate(iso){ return iso ? new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—' }
+function esc(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;') }
+// Argumento de texto para onclick="f(...)": JSON.stringify faz literal JS válido; esc() protege o atributo.
+function jsArg(v){ return esc(JSON.stringify(String(v ?? ''))) }
+function fmtKey(raw){ return raw ? esc((String(raw).match(/.{1,4}/g) || []).join('-')) : '' }
+function copyText(t) {
+  if (!t) return
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(() => toast('Copiado.', 'ok')).catch(() => prompt('Copie:', t))
+  else prompt('Copie:', t)
+}
+function toast(msg, type = 'info') {
+  const el = document.createElement('div')
+  el.className = 'toast ' + (type === 'ok' ? 'ok' : type === 'err' ? 'err' : 'info')
+  el.textContent = msg
+  document.getElementById('toastWrap').appendChild(el)
+  setTimeout(() => el.remove(), type === 'err' ? 8000 : 3500)
+}
+function abrirModal(titulo, corpo, rodape) {
+  document.getElementById('modalTitle').textContent = titulo
+  document.getElementById('modalBody').innerHTML = corpo
+  document.getElementById('modalFt').innerHTML = rodape
+  document.getElementById('modalOverlay').classList.add('show')
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show') }
+</script>
+</body>
+</html>

@@ -368,6 +368,8 @@ function pedirToken(prompt) {
 }
 async function entrar() {
   erroInicio('')
+  // Aberto pelo arquivo do disco (file://) o Google recusa o login com "Erro 400: invalid_request": o login exige o site https.
+  if (location.protocol === 'file:') { erroInicio('Este Keygen foi aberto pelo arquivo do disco. O login do Google só funciona pelo site: https://geraldomarinhoneto-athronx.github.io/keygen/'); return }
   if (!GOOGLE_CLIENT_ID) { erroInicio('Falta configurar o GOOGLE_CLIENT_ID neste arquivo (ver o guia do Keygen v6.2).'); return }
   if (!window.google?.accounts?.oauth2) { erroInicio('Não carregou o login do Google. Sem internet o Keygen não abre: conecte-se e recarregue (F5).'); return }
   tokenClient ||= google.accounts.oauth2.initTokenClient({
